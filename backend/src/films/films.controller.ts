@@ -1,4 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  HttpStatus,
+} from '@nestjs/common';
 import { FilmsService } from './films.service';
 
 @Controller('films')
@@ -11,7 +17,15 @@ export class FilmsController {
   }
 
   @Get(':id/schedule')
-  findSchedule(@Param('id') id: string) {
+  findSchedule(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    id: string,
+  ) {
     return this.filmsService.findSchedule(id);
   }
 }

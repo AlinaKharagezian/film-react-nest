@@ -1,23 +1,33 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Schedule } from '../films/entities/schedule.entity';
 import { OrderDto } from './dto/order.dto';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    @InjectRepository(Schedule)
+    private readonly scheduleRepository: Repository<Schedule>,
+  ) {}
 
   async create(orderDto: OrderDto) {
     return await this.dataSource.transaction(async (manager) => {
+      const scheduleRepo = manager.withRepository(this.scheduleRepository);
       const items = [];
 
       for (const ticket of orderDto.tickets) {
-        const session = await manager.findOne(Schedule, {
+        const session = await scheduleRepo.findOne({
           where: { id: ticket.session },
         });
 
         if (!session) {
-          throw new BadRequestException('Сеанс не найден');
+          throw new NotFoundException('Сеанс не найден');
         }
 
         const seatLabel = `${ticket.row}:${ticket.seat}`;
@@ -27,7 +37,7 @@ export class OrderService {
         }
 
         session.taken.push(seatLabel);
-        await manager.save(session);
+        await scheduleRepo.save(session);
 
         items.push({
           film: ticket.film,
