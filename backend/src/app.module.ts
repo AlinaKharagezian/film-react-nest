@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import * as path from 'node:path';
-
-import { configProvider } from './app.config.provider';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { FilmsModule } from './films/films.module';
 import { OrderModule } from './order/order.module';
-import { RepositoryModule } from './repository/repository.module';
+import { Film } from './films/entities/film.entity';
+import { Schedule } from './films/entities/schedule.entity';
 
 @Module({
   imports: [
@@ -15,21 +14,22 @@ import { RepositoryModule } from './repository/repository.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MongooseModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('DATABASE_URL'),
+        type: configService.get<string>('DATABASE_DRIVER') as 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        entities: [Film, Schedule],
+        synchronize: false,
       }),
     }),
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'public'),
+      rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/',
     }),
-    RepositoryModule,
     FilmsModule,
     OrderModule,
   ],
-  providers: [configProvider],
-  exports: [configProvider],
 })
 export class AppModule {}
