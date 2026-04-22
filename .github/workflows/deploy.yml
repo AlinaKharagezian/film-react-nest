@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - review-3
 
 env:
   REGISTRY: ghcr.io
@@ -46,6 +47,9 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.REPO }}/film-frontend:latest
+          build-args: |
+            VITE_API_URL=/api/afisha
+            VITE_CDN_URL=/content/afisha
 
       - name: Build and push Nginx
         uses: docker/build-push-action@v5
