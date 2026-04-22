@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
     environment:
-      - LOGGER_TYPE=tskv
+      - LOGGER_TYPE=${LOGGER_TYPE}
     depends_on:
       - postgres
     networks:
@@ -26,8 +26,8 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=/api/afisha
-        - VITE_CDN_URL=/content/afisha
+        - VITE_API_URL=${VITE_API_URL}
+        - VITE_CDN_URL=${VITE_CDN_URL}
     image: ghcr.io/alinakharagezian/film-frontend:latest
     restart: unless-stopped
     volumes:
